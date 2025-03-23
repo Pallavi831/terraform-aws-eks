@@ -1,3 +1,9 @@
+resource "aws_key_pair" "eks" {
+  key_name = "expense-eks"
+  #public_key = file("~/.ssh/eks.rsa.pub")
+  public_key = file("C:\\devops\\daws-82s\\daws-82s.pub")
+  
+}
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.0"
@@ -9,7 +15,7 @@ module "eks" {
   cluster_security_group_id = local.eks_control_plane_sg_id
   node_security_group_id = local.eks_node_sg_id
 
-  bootstrap_self_managed_addons = false
+  # bootstrap_self_managed_addons = false
   cluster_addons = {
     coredns                = {}
     eks-pod-identity-agent = {}
@@ -36,19 +42,27 @@ module "eks" {
   eks_managed_node_groups = {
     blue = {
       # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
-      ami_type       = "AL2023_x86_64_STANDARD"
+      # ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = ["m5.xlarge"]
+      key_name= aws_key_pair.eks.key_name
 
       min_size     = 2
       max_size     = 10
       desired_size = 2
+      iam_role_additional_policies= {
+        AmazonEBSCSIDriverPolicy= "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+        AmazonEFSCSIDriverPolicy= "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
+        AmazonEKSLoadBalancingPolicy= "arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy"
     }
+
+    }
+    
   }
 
   tags = merge(
     var.common_tags,
     {
-        Name = local.name
+        Name = local.Name
     }
   )
 }
