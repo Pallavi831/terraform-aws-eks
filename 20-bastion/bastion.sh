@@ -39,3 +39,7 @@ chmod 700 get_helm.sh
 
 # k9s install
 curl -sS https://webinstall.dev/k9s | bash
+
+# mysql
+
+sudo dnf install mysql -y
